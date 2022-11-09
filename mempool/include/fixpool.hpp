@@ -31,8 +31,7 @@
 #define MP_NODISCARD
 #endif
 
-// Memory pool, same as pool::fixed_memory_pool, however, the chunk size is determined at runtime
-// also blockSize must be multiple of block_alignment
+
 namespace pool
 {
     template <typename T, size_t blockSize>
@@ -57,7 +56,7 @@ namespace pool
             uint8_t *block_beginning { nullptr };
             uint8_t *block_end { nullptr };
 
-#ifndef MP_DEBUG
+#ifdef MP_DEBUG
             // Just for debugging purposes
             [[maybe_unused]] size_t *block_beginning_ { nullptr };
 #endif /*MP_DEBUG*/
@@ -123,7 +122,7 @@ namespace pool
             (*pBlock)->block_end       = (*pBlock)->block_beginning + blockSize;
             (*pBlock)->previous_block  = previous;
 
-#ifndef MP_DEBUG
+#ifdef MP_DEBUG
             // Just for debugging purposes
             (*pBlock)->block_beginning_ = static_cast<size_t *>((*pBlock)->_block);
 #endif /*MP_DEBUG*/

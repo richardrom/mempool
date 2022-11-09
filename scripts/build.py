@@ -43,33 +43,33 @@ def main(argv):
 
 
 def cmake_configure():
-    targets = {
+    types = {
         "Release": "../build/release",
         "Debug": "../build/debug"
     }
 
-    for t in targets:
+    for t in types:
         params = ["cmake", f'-DCMAKE_BUILD_TYPE={t}', F"-DCMAKE_MAKE_PROGRAM=ninja",
                   f"-DCMAKE_C_COMPILER={cl_c}", f"-DCMAKE_CXX_COMPILER={cl_cpp}",
                   "-G", "Ninja", f"-DCMAKE_TOOLCHAIN_FILE={vcpkg_toolchain}",
-                  "-S", "..", "-B", f"{targets[t]}"]
+                  "-S", "..", "-B", f"{types[t]}"]
         cmake_bin = subprocess.run(params)
         if cmake_bin.returncode != 0:
             print(f'CMake returned {cmake_bin.returncode} and can not proceed')
             exit(1)
 
-        compile_params = ["cmake", "--build", f"{targets[t]}", "--target", "mempool", "memtests", "--", "-j", "8"]
+        compile_params = ["cmake", "--build", f"{types[t]}", "--target", "mempool", "memtests", "--", "-j", "8"]
         cmake_bin = subprocess.run(compile_params)
         if cmake_bin.returncode != 0:
             print(f'CMake returned {cmake_bin.returncode} and can not proceed')
             exit(1)
 
         print(f"Running {t} tests...")
-        path = targets[t] + "/test/memtests"
+        path = types[t] + "/test/memtests"
         run_tests = [path]
         tests_bin = subprocess.run(run_tests)
         if tests_bin.returncode != 0:
-            print(f'{targets[t]} tests failed')
+            print(f'{types[t]} tests failed')
 
 
 if __name__ == "__main__":

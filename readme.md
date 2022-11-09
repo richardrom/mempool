@@ -3,7 +3,6 @@
 This is a simple C++20 header-only fixed-sized memory pool with a single linked list for the freelist.
 
 It consists on two classes contained in the *__pool__* namespace.
-fixed_memory_pool contains all the po
 
 ```c++
 namespace pool{
@@ -15,7 +14,7 @@ namespace pool{
 }
 ```
 
-The class *fixed_memory_pool* contains all functionality of the memory pool while the class *fixed_allocator
+The struct *fixed_memory_pool* contains all functionality of the memory pool while the class *fixed_allocator
 wraps the functionality in two methods
 
 ### class fixed_allocator;
@@ -55,9 +54,9 @@ By default, aligns the memory block to the system page size.
 
 Will throw an exception if:
 
-- chunk is less than sizeof(void*). The reason lies because the freelist stores absolute addresses.
+- chunk is less than sizeof(void*). That is because the freelist stores addresses.
 - if *blockSize* **mod** *chunk* is not zero.
-- if the block size is less than the system memory page size. On must systems this size is 4096 KB
+- if the block size is less than the system memory page size. On must systems, this size is 4096 KB
 
 On must cases *class fixed_allocator;* is enough. However, fixed_memory_pool contains
 
@@ -65,7 +64,7 @@ On must cases *class fixed_allocator;* is enough. However, fixed_memory_pool con
 [[nodiscard]] auto dump_free_list(T *p) -> std::vector<std::pair<T *, T *>>;
 ```
 
-Which can be useful to see the freelist under the hood.
+Which can be useful to see the freelist under the hood and several other methods to help in the debugging process.
 
 ## Usage
 

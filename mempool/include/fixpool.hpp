@@ -31,7 +31,6 @@
 #define MP_NODISCARD
 #endif
 
-
 namespace pool
 {
     template <typename T, size_t blockSize>
@@ -117,7 +116,7 @@ namespace pool
             memset((*pBlock)->_block, 0, blockSize);
 
             // Init the free list
-            (*pBlock)->next_free_chunk = static_cast<size_t *>((*pBlock)->_block); // Point at the first of the block
+            (*pBlock)->next_free_chunk = static_cast<size_t *>((*pBlock)->_block);
             (*pBlock)->block_beginning = static_cast<uint8_t *>((*pBlock)->_block);
             (*pBlock)->block_end       = (*pBlock)->block_beginning + blockSize;
             (*pBlock)->previous_block  = previous;
@@ -191,7 +190,7 @@ namespace pool
         template <typename... Args>
         auto alloc(Args &&...args) -> T *
         {
-            // Just return according to get_free_block
+            // Just return according to get_available_chunk
             return new (get_available_chunk()) T(std::forward<Args>(args)...);
         }
 
@@ -199,7 +198,7 @@ namespace pool
         {
             T *ptr = *_ptr;
 
-            if(ptr == nullptr)
+            if (ptr == nullptr)
                 return;
 
             // Get the block of the current chunk
@@ -250,6 +249,8 @@ namespace pool
                     // Do not free the block, we might scramble the available address
                     // But we are still in log(1) and without any system call when allocating a new chunk
                     free_block(used_block);
+                    // Once freed set the pointer to nullptr
+                    *_ptr = nullptr;
                     return; // We don't need the next code
                 }
             }
@@ -257,8 +258,8 @@ namespace pool
             if (used_block->available_chunks == 1)
             {
                 // In this situation used_block->next_free_chunk is going to be nullptr
-                // So, we only need to point used_block->next_free_chunk to this freed
-                // and write zero to the address pointer by used_block->next_free_chunk
+                // So, we only need to point used_block->next_free_chunk to this freed chunk
+                // and write zero to the address pointed by used_block->next_free_chunk
                 used_block->next_free_chunk  = reinterpret_cast<size_t *>(ptr);
                 *used_block->next_free_chunk = 0;
 
@@ -340,7 +341,7 @@ namespace pool
         /// \return A block address
         MP_NODISCARD auto block_address(T *p) -> auto
         {
-            if(p == nullptr)
+            if (p == nullptr)
                 return first_block->block_beginning;
             return block_from_pointer(p)->block_beginning;
         }
@@ -360,17 +361,15 @@ namespace pool
             std::vector<std::pair<T *, T *>> data;
             data.reserve(block->available_chunks);
 
-            auto *free   = block->next_free_chunk;
+            auto *free = block->next_free_chunk;
             do {
-                auto *next = reinterpret_cast<size_t*>(*free);
+                auto *next = reinterpret_cast<size_t *>(*free);
                 data.emplace_back(reinterpret_cast<T *>(free), reinterpret_cast<T *>(next));
                 free = next;
             } while (free != nullptr);
 
             return data;
         }
-
-
 
     protected:
         auto get_available_chunk() -> T *
@@ -391,15 +390,15 @@ namespace pool
                 if (next == nullptr)
                 {
                     // Ups! we do not have any more blocks
-                    // Stop the loop, current_block points to the last available block
-                    // And the next condition will handle the creation of a new block
+                    // Stop the loop because current_block points to the last available block.
+                    // The next condition will handle the creation of a new block
                     break;
                 }
             }
 
             if (current_block->available_chunks == 0) // No more chunks
             {
-                // Allocate a new block, allocate_block will handle for us, setting the previous block
+                // Allocate a new block; allocate_block, will handle for us setting the double-linked list
                 // of the newly created block
                 allocate_block(&current_block->next_block, current_block);
                 current_block = current_block->next_block; // Update the current block
@@ -413,13 +412,13 @@ namespace pool
             current_block->available_space -= chunk_size;
             current_block->used_space += chunk_size;
 
-            // next free chunk will be the beginning of the block if used_chunks is 0
+            // Get the available address
             auto *available = current_block->next_free_chunk;
 
-            // Get the address written in that available chunk. Now current_block->next_free_chunk will hold the next available address
+            // Update current_block->next_free_chunk so it points to the next available address, which is: *current_block->next_free_chunk
             current_block->next_free_chunk = reinterpret_cast<size_t *>(*available);
 
-            // Return the next free block
+            // Return the available address
             return reinterpret_cast<T *>(available);
         }
 

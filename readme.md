@@ -33,8 +33,8 @@ void deallocate(T *p);
 ```
 
 Special considerations about *deallocate*.
-Don't deallocate twice a chunk since it will corrupt the freelist
-If the pointer to release is not in a pool block it will throw an std::exception
+- Don't deallocate twice a chunk since it will corrupt the freelist.
+- If the pointer to release is not in a pool block it will throw an exception.
 
 ### struct fixed_memory_pool
 
@@ -56,7 +56,7 @@ Will throw an exception if:
 
 - chunk is less than sizeof(void*). That is because the freelist stores addresses.
 - if *blockSize* **mod** *chunk* is not zero.
-- if the block size is less than the system memory page size. On must systems, this size is 4096 KB
+- if the block size is less than the system memory page size. On must systems, this size is 4096 bytes
 
 On must cases *class fixed_allocator;* is enough. However, fixed_memory_pool contains
 
@@ -146,5 +146,5 @@ python build.py -v {VCPKG_INSTALL_PATH} -c {COMPILER_BINARY_PATH}
 ```
 This will compile and run the tests for the Release and Debug building types.
 
-- {VCPKG_INSTALL_PATH} is the path of vcpkg the script will add */vcpkg/scripts/buildsystems/vcpkg.cmake* to find the toolchain file.
+- {VCPKG_INSTALL_PATH} is the path of vcpkg. The script will add */vcpkg/scripts/buildsystems/vcpkg.cmake* to find the toolchain file.
 - {COMPILER_BINARY_PATH} is used to find the desire compiler

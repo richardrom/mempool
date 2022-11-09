@@ -1,0 +1,22 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.24)
+
+SET(CMAKE_CXX_STANDARD 20)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+FIND_PACKAGE(Catch2 CONFIG REQUIRED)
+
+SET(SOURCE_FILES
+        main.cpp
+        tests.cpp)
+
+SET(MPOOL_TEST memtests)
+ADD_EXECUTABLE(${MPOOL_TEST} ${SOURCE_FILES})
+
+TARGET_LINK_LIBRARIES(${MPOOL_TEST} PRIVATE Catch2::Catch2WithMain)
+
+SET(COMPILER_OPTIONS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-reserved-identifier -Wno-poison-system-directories")
+
+SET_SOURCE_FILES_PROPERTIES(
+        ${SOURCE_FILES}
+        PROPERTIES
+        COMPILE_FLAGS "${COMPILER_OPTIONS}")

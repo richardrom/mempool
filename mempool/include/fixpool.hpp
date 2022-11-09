@@ -449,7 +449,7 @@ namespace pool
             // Return a new block
             return allocator.alloc(std::forward<Args>(args)...);
         }
-        void deallocate(T *p) noexcept
+        void deallocate(T *p)
         {
             allocator.release(&p);
         }

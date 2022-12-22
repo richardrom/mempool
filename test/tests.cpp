@@ -48,7 +48,7 @@ TEST_CASE("Memory free inside block")
     using namespace Catch::Matchers;
     pool::fixed_memory_pool<int, 4096> pool(8);
     int *i0 = new int;
-    CHECK_THROWS_WITH(pool.release(&i0), ContainsSubstring("does not belong"));
+    CHECK_THROWS_WITH(pool.release(i0), ContainsSubstring("does not belong"));
     delete i0;
 }
 
@@ -63,7 +63,7 @@ TEST_CASE("Memory data integrity and release")
     int *i1 = i0;
     CHECK(*i1 == 0x6989aabb);
 
-    CHECK_NOTHROW(pool.release(&i0));
+    CHECK_NOTHROW(pool.release(i0));
     CHECK(i0 == nullptr);
 }
 
@@ -103,8 +103,8 @@ TEST_CASE("Arguments passed to object via alloc")
     REQUIRE(a1->_i2 == 0x123320ull);
     REQUIRE(a1->_s == "test second string");
 
-    CHECK_NOTHROW(pool.release(&a0));
-    CHECK_NOTHROW(pool.release(&a1));
+    CHECK_NOTHROW(pool.release(a0));
+    CHECK_NOTHROW(pool.release(a1));
     CHECK(a0 == nullptr);
     CHECK(a1 == nullptr);
 }
@@ -133,7 +133,7 @@ TEST_CASE("Check block count and value integrity across multiple allocations and
     {
         auto iter     = addressMap.begin();
         auto *pointer = iter->first;
-        CHECK_NOTHROW(pool.release(&pointer));
+        CHECK_NOTHROW(pool.release(pointer));
         addressMap.erase(addressMap.begin());
     }
     REQUIRE(pool.block_count() == 3);
@@ -238,7 +238,7 @@ TEST_CASE("Free list integrity")
 
             auto *prevRelease  = addresses[delIndex];
             auto *checkAddress = prevRelease;
-            pool.release(&prevRelease);
+            pool.release(prevRelease);
 
             freeList = pool.dump_free_list(addresses[0]);
 
@@ -271,7 +271,7 @@ TEST_CASE("Free list integrity")
             for (const auto &indexPath : path)
             {
                 auto *freePtr = addresses[indexPath];
-                pool.release(&freePtr);
+                pool.release(freePtr);
                 freeList = pool.dump_free_list(addresses[0]);
 
                 REQUIRE(freeList.size() == at);
@@ -311,34 +311,34 @@ TEST_CASE("Multiple pools")
     REQUIRE( pool.block_count() == 3 );
 
     CHECK( pool.available_chunks_in_block(_1_pool0) == 0);
-    CHECK_NOTHROW(pool.release(&_2_pool0));
+    CHECK_NOTHROW(pool.release(_2_pool0));
     CHECK(pool.available_chunks_in_block(_3_pool0) == 1);
-    CHECK_NOTHROW(pool.release(&_4_pool0));
+    CHECK_NOTHROW(pool.release(_4_pool0));
     CHECK(pool.available_chunks_in_block(_3_pool0) == 2);
 
     CHECK( pool.available_chunks_in_block(_1_pool1) == 0);
-    CHECK_NOTHROW(pool.release(&_2_pool1));
+    CHECK_NOTHROW(pool.release(_2_pool1));
     CHECK(pool.available_chunks_in_block(_3_pool1) == 1);
-    CHECK_NOTHROW(pool.release(&_4_pool1));
+    CHECK_NOTHROW(pool.release(_4_pool1));
     CHECK(pool.available_chunks_in_block(_3_pool1) == 2);
 
 
     CHECK( pool.available_chunks_in_block(_1_pool2) == 0);
-    CHECK_NOTHROW(pool.release(&_2_pool2));
+    CHECK_NOTHROW(pool.release(_2_pool2));
     CHECK(pool.available_chunks_in_block(_3_pool2) == 1);
-    CHECK_NOTHROW(pool.release(&_4_pool2));
+    CHECK_NOTHROW(pool.release(_4_pool2));
     CHECK(pool.available_chunks_in_block(_3_pool2) == 2);
 
-    CHECK_NOTHROW(pool.release(&_1_pool2));
-    CHECK_NOTHROW(pool.release(&_3_pool2));
+    CHECK_NOTHROW(pool.release(_1_pool2));
+    CHECK_NOTHROW(pool.release(_3_pool2));
     REQUIRE( pool.block_count() == 2 );
 
-    CHECK_NOTHROW(pool.release(&_1_pool1));
-    CHECK_NOTHROW(pool.release(&_3_pool1));
+    CHECK_NOTHROW(pool.release(_1_pool1));
+    CHECK_NOTHROW(pool.release(_3_pool1));
     REQUIRE( pool.block_count() == 1 );
 
-    CHECK_NOTHROW(pool.release(&_1_pool0));
-    CHECK_NOTHROW(pool.release(&_3_pool0));
+    CHECK_NOTHROW(pool.release(_1_pool0));
+    CHECK_NOTHROW(pool.release(_3_pool0));
     REQUIRE( pool.block_count() == 1 );
     REQUIRE( pool.available_chunks_in_block(reinterpret_cast<size_t*>(pool.block_address(nullptr))) == 4 );
 }
@@ -367,7 +367,7 @@ TEST_CASE("Benchmarking")
             }
             for (auto &p : poolObject)
             {
-                pool.release(&p);
+                pool.release(p);
             }
         });
     };

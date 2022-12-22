@@ -194,10 +194,8 @@ namespace pool
             return new (get_available_chunk()) T(std::forward<Args>(args)...);
         }
 
-        void release(T **_ptr)
+        void release(T *&ptr)
         {
-            T *ptr = *_ptr;
-
             if (ptr == nullptr)
                 return;
 
@@ -246,11 +244,16 @@ namespace pool
 
                 if (releaseUsedBlock)
                 {
+                    // Call the destructor before freeing the block
+                    if constexpr (std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
+                        ptr->~T();
+
                     // Do not free the block, we might scramble the available address
                     // But we are still in log(1) and without any system call when allocating a new chunk
                     free_block(used_block);
                     // Once freed set the pointer to nullptr
-                    *_ptr = nullptr;
+
+                    ptr = nullptr;
                     return; // We don't need the next code
                 }
             }
@@ -263,11 +266,19 @@ namespace pool
                 used_block->next_free_chunk  = reinterpret_cast<size_t *>(ptr);
                 *used_block->next_free_chunk = 0;
 
+                // Call the destructor
+                if constexpr (std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
+                    ptr->~T();
+
                 // Once freed set the pointer to nullptr
-                *_ptr = nullptr;
+                ptr = nullptr;
 
                 return; // We don't need the next code
             }
+
+            // Call the destructor
+            if constexpr (std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value)
+                ptr->~T();
 
             // In this situation we must point used_block->next_free_chunk to ptr
             // and write into *ptr the address of used_block->next_free_chunk
@@ -284,7 +295,7 @@ namespace pool
             used_block->next_free_chunk = freed;
 
             // Once freed set the pointer to nullptr
-            *_ptr = nullptr;
+            ptr = nullptr;
         }
 
         MP_NODISCARD auto get_chunk_size() const noexcept -> size_t
@@ -447,9 +458,9 @@ namespace pool
             // Return a new block
             return allocator.alloc(std::forward<Args>(args)...);
         }
-        void deallocate(T *p)
+        void deallocate(T *&p)
         {
-            allocator.release(&p);
+            allocator.release(p);
         }
 
         MP_NODISCARD auto get_chunk_size() const noexcept -> size_t

@@ -3,5 +3,12 @@
   "version-string": "0.1.0",
   "dependencies": [
     "catch2"
-  ]
+  ],
+  "overrides": [
+    {
+      "name": "catch2",
+      "version": "3.1.1#2"
+    }
+  ],
+  "builtin-baseline": "cf1fda5443f2acfa976d5bda70c50fa22c26fe80"
 }
